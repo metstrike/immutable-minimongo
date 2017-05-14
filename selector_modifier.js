@@ -3,6 +3,8 @@ var global = Function('return this')();
 
 var _selector_modifier = function (Minimongo, LocalCollection) {
 
+var  EJSON = require('metstrike-ejson');
+
 // Returns true if the modifier applied to some document may change the result
 // of matching the document by selector
 // The modifier is always in a form of Object:

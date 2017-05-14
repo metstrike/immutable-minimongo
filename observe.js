@@ -1,8 +1,8 @@
 var global = Function('return this')();
-var EJSON = require('meteor-standalone-ejson');
-var OrderedDict = require('meteor-standalone-ordered-dict');
-var DiffSequence = require('meteor-standalone-diff-sequence');
-var MongoID = require('meteor-standalone-mongo-id');
+var EJSON = require('metstrike-ejson');
+var OrderedDict = require('metstrike-ordered-dict');
+var DiffSequence = require('metstrike-diff-sequence');
+var MongoID = require('metstrike-mongo-id');
 var _ = require('underscore');
 
 function setObserve(LocalCollection) {

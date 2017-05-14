@@ -1,10 +1,11 @@
 # Minimongo
 [Source code of released version](https://github.com/meteor/meteor/tree/master/packages/minimongo) | [Source code of development version](https://github.com/meteor/meteor/tree/devel/packages/minimongo)
 ***
+This package is a clone of [meteor-standalone-minimongo](https://www.npmjs.com/package/meteor-standalone-minimongo). The original repository of all meteor standalone packages: https://github.com/ivanthedeployer/meteor. The MIT license applies.
 
 This version of Minimongo is minimally modified to be installable and testable using only NPM.  It was modified to support the [React Meteor Standalone Mixin](https://www.npmjs.com/package/meteor-standalone-react-mixin)
 
-Exposes the following with require('meteor-standalone-minimongo')
+Exposes the following with require('metstrike-minimongo')
 * Minimongo
 * LocalCollection
 * MinimongoTest
@@ -94,4 +95,3 @@ changes and throw away all the simulated changes (with `retrieveOriginals`).
 - All massive replacements happen in between `pauseObservers` and
   `resumeObservers` calls, so any user code (such as Blaze) sees the whole
   change in one tick (helps to avoid the flicker).
-

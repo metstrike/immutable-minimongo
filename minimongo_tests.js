@@ -4,14 +4,15 @@ var mm = require('./minimongo.js');
 var LocalCollection = mm.LocalCollection,
     Minimongo = mm.Minimongo,
     _ = require('underscore'),
-    Meteor = require('meteor-standalone-npm-shim'),
+    Meteor = require('metstrike-npm-shim'),
     MinimongoTest = mm.MinimongoTest,
-    Tinytest = require('meteor-standalone-npm-tinytest'),
-    Random = require('meteor-standalone-random'),
-    MongoID = require('meteor-standalone-mongo-id'),
+    Tinytest = require('metstrike-npm-tinytest'),
+    Random = require('metstrike-random'),
+    MongoID = require('metstrike-mongo-id'),
     ReactiveVar = mm.ReactiveVar,
     Tracker = mm.Tracker,
-    EJSON = require('meteor-standalone-ejson');
+    MinimongoError = mm.MinimongoError,
+    EJSON = require('metstrike-ejson');
 
 // Hack to make LocalCollection generate ObjectIDs by default.
 LocalCollection._useOID = true;
@@ -3387,4 +3388,3 @@ Tinytest.add("minimongo - cannot $rename with null bytes", function (test) {
 Tinytest.runNpm();
 
 });
-

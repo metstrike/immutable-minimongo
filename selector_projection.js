@@ -1,3 +1,9 @@
+var global = Function('return this')();
+
+var _selector_projection = function (Minimongo, LocalCollection, global) {
+
+var  _ = require('underscore');
+
 // Knows how to combine a mongo selector and a fields projection to a new fields
 // projection taking into account active fields from the passed selector.
 // @returns Object - projection object (same as fields option of mongo cursor)
@@ -22,7 +28,7 @@ Minimongo._pathsElidingNumericKeys = function (paths) {
   });
 };
 
-combineImportantPathsIntoProjection = function (paths, projection) {
+var combineImportantPathsIntoProjection = function (paths, projection) {
   var prjDetails = projectionDetails(projection);
   var tree = prjDetails.tree;
   var mergedProjection = {};
@@ -51,6 +57,8 @@ combineImportantPathsIntoProjection = function (paths, projection) {
   }
 };
 
+global.combineImportantPathsIntoProjection = combineImportantPathsIntoProjection;
+
 // Returns a set of key paths similar to
 // { 'foo.bar': 1, 'a.b.c': 1 }
 var treeToPaths = function (tree, prefix) {
@@ -66,4 +74,10 @@ var treeToPaths = function (tree, prefix) {
 
   return result;
 };
+}
 
+if(global.Minimongo && global.LocalCollection){
+  _selector_projection(Minimongo, LocalCollection);
+}
+
+module.exports = _selector_projection;

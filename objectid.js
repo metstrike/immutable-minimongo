@@ -1,5 +1,5 @@
 var global = Function('return this')();
-var MongoID = require('meteor-standalone-mongo-id');
+var MongoID = require('metstrike-mongo-id');
 var _ = require('underscore');
 
 function setObjectId(LocalCollection){

@@ -1,4 +1,4 @@
-var EJSON = require('meteor-standalone-ejson');
+var EJSON = require('metstrike-ejson');
 var global = Function('return this')();
 var _ = require('underscore');
 

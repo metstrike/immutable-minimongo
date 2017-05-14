@@ -1,6 +1,6 @@
 var global = Function('return this')();
 var _ = require('underscore');
-var EJSON = require('meteor-standalone-ejson');
+var EJSON = require('metstrike-ejson');
 
 // XXX need a strategy for passing the binding of $ into this
 // function, from the compiled selector

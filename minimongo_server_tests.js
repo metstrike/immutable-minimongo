@@ -1,3 +1,19 @@
+require('strict-mode')(function () {
+
+var mm = require('./minimongo.js');
+var LocalCollection = mm.LocalCollection,
+    Minimongo = mm.Minimongo,
+    _ = require('underscore'),
+    Meteor = require('metstrike-npm-shim'),
+    MinimongoTest = mm.MinimongoTest,
+    Tinytest = require('metstrike-npm-tinytest'),
+    Random = require('metstrike-random'),
+    MongoID = require('metstrike-mongo-id'),
+    ReactiveVar = mm.ReactiveVar,
+    Tracker = mm.Tracker,
+    MinimongoError = mm.MinimongoError,
+    EJSON = require('metstrike-ejson');
+
 Tinytest.add("minimongo - modifier affects selector", function (test) {
   function testSelectorPaths (sel, paths, desc) {
     var matcher = new Minimongo.Matcher(sel);
@@ -569,3 +585,7 @@ Tinytest.add("minimongo - sorter and projection combination", function (test) {
     T({ a: { $ne: { a: 2 } } }, { $set: { a: { a: 2 } } }, "$ne object");
   });
 })();
+
+Tinytest.runNpm();
+
+});

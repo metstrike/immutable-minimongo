@@ -1,8 +1,8 @@
 var global = Function('return this')();
 var _ = require('underscore');
-var MongoID = require('meteor-standalone-mongo-id');
-var EJSON = require('meteor-standalone-ejson');
-var GeoJSON = require('meteor-standalone-geojson-utils');
+var MongoID = require('metstrike-mongo-id');
+var EJSON = require('metstrike-ejson');
+var GeoJSON = require('metstrike-geojson-utils');
 
 // The minimongo selector compiler!
 

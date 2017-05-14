@@ -1,6 +1,6 @@
 {
-  "name": "meteor-standalone-minimongo",
-  "version": "0.0.16",
+  "name": "metstrike-minimongo",
+  "version": "1.0.22-p1",
   "description": "Standalone version of Meteor group's Minimongo package for NPM",
   "main": "minimongo.js",
   "scripts": {
@@ -8,30 +8,30 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ivanthedeployer/meteor.git"
+    "url": "git+https://github.com/metstrike/meteor.git"
   },
-  "author": "ivanthedeployer",
+  "author": "metstrike",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/ivanthedeployer/meteor/issues"
+    "url": "https://github.com/metstrike/meteor/issues"
   },
-  "homepage": "https://github.com/ivanthedeployer/meteor#readme",
+  "homepage": "https://github.com/metstrike/meteor#readme",
   "dependencies": {
-    "meteor-standalone-diff-sequence": "*",
-    "meteor-standalone-ejson": "*",
-    "meteor-standalone-geojson-utils": "*",
-    "meteor-standalone-id-map": "*",
-    "meteor-standalone-mongo-id": "*",
-    "meteor-standalone-npm-shim": "*",
-    "meteor-standalone-ordered-dict": "*",
-    "meteor-standalone-random": "*",
-    "meteor-standalone-reactive-dict": "*",
-    "meteor-standalone-reactive-var": "*",
-    "meteor-standalone-tracker": "*",
+    "metstrike-diff-sequence": "*",
+    "metstrike-ejson": "*",
+    "metstrike-geojson-utils": "*",
+    "metstrike-id-map": "*",
+    "metstrike-mongo-id": "*",
+    "metstrike-npm-shim": "*",
+    "metstrike-ordered-dict": "*",
+    "metstrike-random": "*",
+    "metstrike-reactive-dict": "*",
+    "metstrike-reactive-var": "*",
+    "metstrike-tracker": "*",
     "underscore": "^1.8.3"
   },
   "devDependencies": {
-    "meteor-standalone-npm-tinytest": "*",
+    "metstrike-npm-tinytest": "*",
     "strict-mode": "^0.4.2",
     "underscore": "^1.8.3"
   }

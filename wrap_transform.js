@@ -9,8 +9,8 @@
 // - If the return value doesn't have an _id field, add it back.
 var global = Function('return this')();
 var _ = require('underscore');
-var EJSON = require('meteor-standalone-ejson');
-var Tracker = require('meteor-standalone-tracker');
+var EJSON = require('metstrike-ejson');
+var Tracker = require('metstrike-tracker');
 
 var setWrapTransform = function (LocalCollection) {
 

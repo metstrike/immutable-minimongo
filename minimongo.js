@@ -10,20 +10,20 @@
 var global = Function('return this')();
 var _ = require('underscore');
 
-var Meteor = require('meteor-standalone-npm-shim');
+var Meteor = require('metstrike-npm-shim');
 
-var Tracker = require('meteor-standalone-tracker');
-var EJSON = require('meteor-standalone-ejson');
+var Tracker = require('metstrike-tracker');
+var EJSON = require('metstrike-ejson');
 // This one has something like atest
 
-var Random = require('meteor-standalone-random');
+var Random = require('metstrike-random');
 // Doesn't look necessary for thsi file
-//var IdMap = require('meteor-standalone-id-map');
+//var IdMap = require('metstrike-id-map');
 
-var MongoID = require('meteor-standalone-mongo-id');
-var DiffSequence = require('meteor-standalone-diff-sequence');
-var ReactiveVar = require('meteor-standalone-reactive-var');
-var ReactiveDict = require('meteor-standalone-reactive-dict');
+var MongoID = require('metstrike-mongo-id');
+var DiffSequence = require('metstrike-diff-sequence');
+var ReactiveVar = require('metstrike-reactive-var');
+var ReactiveDict = require('metstrike-reactive-dict');
 
 /*
 api.use([
@@ -1181,6 +1181,8 @@ require('./wrap_transform.js')(LocalCollection);  // Needs help with global func
 require('./selector.js')(Minimongo, LocalCollection, MinimongoTest, global);
 require('./sort.js')(Minimongo, LocalCollection);
 require('./selector_modifier.js')(Minimongo, LocalCollection);
+require('./selector_projection.js')(Minimongo, LocalCollection, global);
+require('./sorter_projection.js')(Minimongo, LocalCollection);
 
 require('./projection.js')(Minimongo, LocalCollection, MinimongoError, global);
 require('./modify.js')(Minimongo, LocalCollection, MinimongoError);
@@ -1198,7 +1200,6 @@ module.exports = {
   ReactiveVar: ReactiveVar,
   Tracker: Tracker,
   MongoID: MongoID,
+  MinimongoError: MinimongoError,
   EJSON: EJSON
 };
-
-

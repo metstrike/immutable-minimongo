@@ -1,6 +1,6 @@
 var global = Function('return this')();
 var _ = require('underscore');
-var EJSON = require('meteor-standalone-ejson');
+var EJSON = require('metstrike-ejson');
 
 // Knows how to compile a fields projection to a predicate function.
 // @returns - Function: a closure that filters out an object according to the
@@ -186,9 +186,10 @@ LocalCollection._checkSupportedProjection = function (fields) {
   });
 };
 
+_.extend(global, _globals);
+
 }
 
 if(global.Minimongo && global.LocalCollection){setProjection(global.Minimongo, global.LocalCollection, global);}
 
 module.exports = setProjection;
-

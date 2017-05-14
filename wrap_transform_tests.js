@@ -1,3 +1,19 @@
+require('strict-mode')(function () {
+
+var mm = require('./minimongo.js');
+var LocalCollection = mm.LocalCollection,
+    Minimongo = mm.Minimongo,
+    _ = require('underscore'),
+    Meteor = require('metstrike-npm-shim'),
+    MinimongoTest = mm.MinimongoTest,
+    Tinytest = require('metstrike-npm-tinytest'),
+    Random = require('metstrike-random'),
+    MongoID = require('metstrike-mongo-id'),
+    ReactiveVar = mm.ReactiveVar,
+    Tracker = mm.Tracker,
+    MinimongoError = mm.MinimongoError,
+    EJSON = require('metstrike-ejson');
+
 Tinytest.add("minimongo - wrapTransform", function (test) {
   var wrap = LocalCollection.wrapTransform;
 
@@ -55,4 +71,8 @@ Tinytest.add("minimongo - wrapTransform", function (test) {
     wrap(unwrapped)({_id: "xxx"});
   });
   handle.stop();
+});
+
+Tinytest.runNpm();
+
 });

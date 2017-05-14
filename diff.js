@@ -1,5 +1,5 @@
 var global = Function('return this')();
-var DiffSequence = require('meteor-standalone-diff-sequence');
+var DiffSequence = require('metstrike-diff-sequence');
 
 // ordered: bool.
 // old_results and new_results: collections of documents.
