@@ -1,6 +1,6 @@
 require('strict-mode')(function () {
 
-var mm = require('./minimongo.js');
+var mm = require('./immutable_minimongo.js');
 var LocalCollection = mm.LocalCollection,
     Minimongo = mm.Minimongo,
     _ = require('underscore'),

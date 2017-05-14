@@ -1,6 +1,6 @@
 var EJSON = require('metstrike-ejson');
 var global = Function('return this')();
-var _ = require('underscore');
+var _ = require('./immutable_underscore.js');
 
 function getFns(LocalCollection) {
 
@@ -8,7 +8,7 @@ function getFns(LocalCollection) {
 // arrays.
 // XXX maybe this should be EJSON.isArray
 var isArray = function (x) {
-  return _.isArray(x) && !EJSON.isBinary(x);
+  return _.isArray(x) && !EJSON.isBinary(x) || _.isImmutableList(x);
 };
 
 // XXX maybe this should be EJSON.isObject, though EJSON doesn't know about
@@ -64,4 +64,3 @@ var fns = {
 if(global.LocalCollection){getFns(global.LocalCollection);}
 
 module.exports = getFns;
-

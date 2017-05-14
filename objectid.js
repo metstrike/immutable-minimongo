@@ -1,6 +1,6 @@
 var global = Function('return this')();
 var MongoID = require('metstrike-mongo-id');
-var _ = require('underscore');
+var _ = require('./immutable_underscore.js');
 
 function setObjectId(LocalCollection){
 
@@ -34,14 +34,15 @@ LocalCollection._idsMatchedBySelector = function (selector) {
   // Do we have an _id clause?
   if (_.has(selector, '_id')) {
     // Is the _id clause just an ID?
-    if (LocalCollection._selectorIsId(selector._id))
-      return [selector._id];
+    if (LocalCollection._selectorIsId(_.get(selector, '_id')))
+      return [_.get(selector, '_id')];
     // Is the _id clause {_id: {$in: ["x", "y", "z"]}}?
-    if (selector._id && selector._id.$in
-        && _.isArray(selector._id.$in)
-        && !_.isEmpty(selector._id.$in)
-        && _.all(selector._id.$in, LocalCollection._selectorIsId)) {
-      return selector._id.$in;
+    var din = _.get(selector, '_id') && _.get(_.get(selector, '_id'), '$in');
+    if (din
+        && _.isArray(din)
+        && !_.isEmpty(din)
+        && _.all(din, LocalCollection._selectorIsId)) {
+      return din;
     }
     return null;
   }
@@ -65,5 +66,3 @@ LocalCollection._idsMatchedBySelector = function (selector) {
 if(global.LocalCollection){setObjectId(global.LocalCollection);}
 
 module.exports = setObjectId;
-
-

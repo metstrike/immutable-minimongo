@@ -1,6 +1,7 @@
 var global = Function('return this')();
-var _ = require('underscore');
+var _ = require('./immutable_underscore.js');
 var EJSON = require('metstrike-ejson');
+var Immutable = require('immutable');
 
 // Knows how to compile a fields projection to a predicate function.
 // @returns - Function: a closure that filters out an object according to the
@@ -21,35 +22,40 @@ LocalCollection._compileProjection = function (fields) {
   // returns transformed doc according to ruleTree
   var transform = function (doc, ruleTree) {
     // Special case for "sets"
-    if (_.isArray(doc))
+    if (isArray(doc))
       return _.map(doc, function (subdoc) { return transform(subdoc, ruleTree); });
 
-    var res = details.including ? {} : EJSON.clone(doc);
+    var res = details.including ? new Immutable.OrderedMap().asMutable() : doc;
     _.each(ruleTree, function (rule, key) {
       if (!_.has(doc, key))
         return;
       if (_.isObject(rule)) {
         // For sub-objects/subsets we branch
-        if (_.isObject(doc[key]))
-          res[key] = transform(doc[key], rule);
+    	let val=_.get(doc, key);
+        if (_.isObject(val))
+          res = res.set(key, transform(val, rule));
         // Otherwise we don't even touch this subfield
       } else if (details.including)
-        res[key] = EJSON.clone(doc[key]);
+        res = res.set(key, doc.get(key));
       else
-        delete res[key];
+        res = res.remove(key);
     });
 
     return res;
   };
 
   return function (obj) {
+    if(!_.isImmutable(obj)) {
+      var s = "Object is not immutable: "+JSON.stringify(obj);
+      console.log(s);
+    }
     var res = transform(obj, details.tree);
 
     if (_idProjection && _.has(obj, '_id'))
-      res._id = obj._id;
+      res = res.set('_id', _.get(obj, '_id'));
     if (!_idProjection && _.has(res, '_id'))
-      delete res._id;
-    return res;
+      res = res.remove('_id');
+    return res.asImmutable();
   };
 };
 

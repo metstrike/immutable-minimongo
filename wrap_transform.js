@@ -9,6 +9,7 @@
 // - If the return value doesn't have an _id field, add it back.
 var global = Function('return this')();
 var _ = require('underscore');
+var Immutable = require('immutable');
 var EJSON = require('metstrike-ejson');
 var Tracker = require('metstrike-tracker');
 
@@ -23,13 +24,13 @@ LocalCollection.wrapTransform = function (transform) {
     return transform;
 
   var wrapped = function (doc) {
-    if (!_.has(doc, '_id')) {
+    if (!doc.has('_id')) {
       // XXX do we ever have a transform on the oplog's collection? because that
       // collection has no _id.
       throw new Error("can only transform documents with _id");
     }
 
-    var id = doc._id;
+    var id = doc.get('_id');
     // XXX consider making tracker a weak dependency and checking Package.tracker here
     var transformed = Tracker.nonreactive(function () {
       return transform(doc);
@@ -39,12 +40,12 @@ LocalCollection.wrapTransform = function (transform) {
       throw new Error("transform must return object");
     }
 
-    if (_.has(transformed, '_id')) {
-      if (!EJSON.equals(transformed._id, id)) {
+    if (transformed.has('_id')) {
+      if (!Immutable.is(transformed.get('_id'), id)) {
         throw new Error("transformed document can't have different _id");
       }
     } else {
-      transformed._id = id;
+      transformed = transformed.set('_id', id);
     }
     return transformed;
   };
@@ -56,4 +57,3 @@ LocalCollection.wrapTransform = function (transform) {
 if(global.LocalCollection){setWrapTransform(global.LocalCollection);}
 
 module.exports = setWrapTransform;
-

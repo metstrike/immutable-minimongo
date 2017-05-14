@@ -1,5 +1,6 @@
 var global = Function('return this')();
-var _ = require('underscore');
+var _ = require('./immutable_underscore.js');
+var Immutable = require('immutable');
 
 // Give a sort spec, which can be in any of these forms:
 //   {"key1": 1, "key2": -1}
@@ -64,6 +65,7 @@ Minimongo.Sorter = function (spec, options) {
     _.each(self._sortSpecParts, function (spec) {
       selector[spec.path] = 1;
     });
+    selector = Immutable.fromJS(selector);
     self._selectorForAffectedByModifier = new Minimongo.Matcher(selector);
   }
 
@@ -96,11 +98,11 @@ _.extend(Minimongo.Sorter.prototype, {
     // Return a comparator which first tries the sort specification, and if that
     // says "it's equal", breaks ties using $near distances.
     return composeComparators([self._getBaseComparator(), function (a, b) {
-      if (!distances.has(a._id))
-        throw Error("Missing distance for " + a._id);
-      if (!distances.has(b._id))
-        throw Error("Missing distance for " + b._id);
-      return distances.get(a._id) - distances.get(b._id);
+      if (!distances.has(_.get(a, '_id')))
+        throw Error("Missing distance for " + _.get(a, '_id'));
+      if (!distances.has(_.get(b, '_id')))
+        throw Error("Missing distance for " + _.get(b, '_id'));
+      return distances.get(_.get(a, '_id')) - distances.get(_.get(b, '_id'));
     }]);
   },
 
@@ -398,7 +400,7 @@ _.extend(Minimongo.Sorter.prototype, {
     self._keyFilter = function (key) {
       return _.all(self._sortSpecParts, function (specPart, index) {
         return _.all(constraintsByPath[specPart.path], function (f) {
-          return f(key[index]);
+          return f(_.get(key, index));
         });
       });
     };
@@ -425,4 +427,3 @@ var composeComparators = function (comparatorArray) {
 if(global.LocalCollection && global.Minimongo){setSort(Minimongo, LocalCollection);}
 
 module.exports = setSort;
-

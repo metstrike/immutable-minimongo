@@ -1,26 +1,25 @@
 {
-  "name": "metstrike-minimongo",
-  "version": "1.0.22-p1",
-  "description": "Standalone version of Meteor group's Minimongo package for NPM",
-  "main": "minimongo.js",
+  "name": "immutable-minimongo",
+  "version": "0.0.1",
+  "description": "Standalone Immutable version of Meteor group's Minimongo package",
+  "main": "immutable_minimongo.js",
   "scripts": {
-    "test": "node minimongo_tests.js"
+    "test": "node minimongo_immutable_tests.js",
+    "debug": "node --inspect --debug-brk minimongo_immutable_tests.js"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/metstrike/meteor.git"
+    "url": "git+https://github.com/metstrike/immutable-minimongo.git"
   },
   "author": "metstrike",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/metstrike/meteor/issues"
+    "url": "https://github.com/metstrike/immutable-minimongo/issues"
   },
-  "homepage": "https://github.com/metstrike/meteor#readme",
+  "homepage": "https://github.com/metstrike/immutable-minimongo#readme",
   "dependencies": {
-    "metstrike-diff-sequence": "*",
+    "immutable": "^4.0.0-rc.2",
     "metstrike-ejson": "*",
-    "metstrike-geojson-utils": "*",
-    "metstrike-id-map": "*",
     "metstrike-mongo-id": "*",
     "metstrike-npm-shim": "*",
     "metstrike-ordered-dict": "*",
@@ -28,11 +27,11 @@
     "metstrike-reactive-dict": "*",
     "metstrike-reactive-var": "*",
     "metstrike-tracker": "*",
+    "mudash": "^0.10.0",
     "underscore": "^1.8.3"
   },
   "devDependencies": {
     "metstrike-npm-tinytest": "*",
-    "strict-mode": "^0.4.2",
-    "underscore": "^1.8.3"
+    "strict-mode": "^0.4.2"
   }
 }

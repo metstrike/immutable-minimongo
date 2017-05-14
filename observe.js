@@ -1,9 +1,9 @@
 var global = Function('return this')();
 var EJSON = require('metstrike-ejson');
 var OrderedDict = require('metstrike-ordered-dict');
-var DiffSequence = require('metstrike-diff-sequence');
+var DiffSequence = require('./immutable_diff_sequence.js');
 var MongoID = require('metstrike-mongo-id');
-var _ = require('underscore');
+var _ = require('./immutable_underscore.js');
 
 function setObserve(LocalCollection) {
 
@@ -35,10 +35,18 @@ LocalCollection._CachingChangeObserver = function (options) {
 
   if (self.ordered) {
     self.docs = new OrderedDict(MongoID.idStringify);
+
+    self.docs.getElement = function (key) {
+      var self = this;
+      if (self.has(key))
+          return self._dict[self._k(key)];
+      return undefined;
+    };
+
     self.applyChange = {
       addedBefore: function (id, fields, before) {
-        var doc = EJSON.clone(fields);
-        doc._id = id;
+        var doc = fields;
+        doc = doc.set('_id', id);
         callbacks.addedBefore && callbacks.addedBefore.call(
           self, id, fields, before);
         // This line triggers if we provide added with movedBefore.
@@ -52,34 +60,47 @@ LocalCollection._CachingChangeObserver = function (options) {
         var doc = self.docs.get(id);
         callbacks.movedBefore && callbacks.movedBefore.call(self, id, before);
         self.docs.moveBefore(id, before || null);
+      },
+      changed: function (id, fields) {
+        var elt = self.docs.getElement(id);
+        var doc = elt.value;
+        if (!doc)
+          throw new Error("Unknown id for changed: " + id);
+        callbacks.changed && callbacks.changed.call(
+          self, id, fields);
+        doc = DiffSequence.applyChanges(doc, fields);
+        elt.value = doc;
+      },
+      removed: function (id) {
+        callbacks.removed && callbacks.removed.call(self, id);
+        self.docs.remove(id);
       }
     };
   } else {
     self.docs = new LocalCollection._IdMap;
     self.applyChange = {
       added: function (id, fields) {
-        var doc = EJSON.clone(fields);
+        var doc = fields;
         callbacks.added && callbacks.added.call(self, id, fields);
-        doc._id = id;
-        self.docs.set(id,  doc);
+        doc = doc.set('_id', id);
+        self.docs.set(id, doc);
+      },
+      changed: function (id, fields) {
+        var doc = self.docs.get(id);
+        if (!doc)
+          throw new Error("Unknown id for changed: " + id);
+        callbacks.changed && callbacks.changed.call(
+          self, id, fields);
+        doc = DiffSequence.applyChanges(doc, fields);
+        self.docs.set(id, doc);
+      },
+      removed: function (id) {
+        callbacks.removed && callbacks.removed.call(self, id);
+        self.docs.remove(id);
       }
     };
   }
 
-  // The methods in _IdMap and OrderedDict used by these callbacks are
-  // identical.
-  self.applyChange.changed = function (id, fields) {
-    var doc = self.docs.get(id);
-    if (!doc)
-      throw new Error("Unknown id for changed: " + id);
-    callbacks.changed && callbacks.changed.call(
-      self, id, EJSON.clone(fields));
-    DiffSequence.applyChanges(doc, fields);
-  };
-  self.applyChange.removed = function (id) {
-    callbacks.removed && callbacks.removed.call(self, id);
-    self.docs.remove(id);
-  };
 };
 
 LocalCollection._observeFromObserveChanges = function (cursor, observeCallbacks) {
@@ -111,12 +132,14 @@ LocalCollection._observeFromObserveChanges = function (cursor, observeCallbacks)
         var self = this;
         if (!(observeCallbacks.changedAt || observeCallbacks.changed))
           return;
-        var doc = EJSON.clone(self.docs.get(id));
+        var elt = self.docs.getElement(id);
+        var doc = elt.value;
         if (!doc)
           throw new Error("Unknown id for changed: " + id);
-        var oldDoc = transform(EJSON.clone(doc));
-        DiffSequence.applyChanges(doc, fields);
+        var oldDoc = transform(doc);
+        doc = DiffSequence.applyChanges(doc, fields);
         doc = transform(doc);
+        elt.value = doc;
         if (observeCallbacks.changedAt) {
           var index = indices ? self.docs.indexOf(id) : -1;
           observeCallbacks.changedAt(doc, oldDoc, index);
@@ -136,7 +159,7 @@ LocalCollection._observeFromObserveChanges = function (cursor, observeCallbacks)
         // document slides everything back one slot.
         if (to > from)
           --to;
-        observeCallbacks.movedTo(transform(EJSON.clone(self.docs.get(id))),
+        observeCallbacks.movedTo(transform(self.docs.get(id)),
                                  from, to, before || null);
       },
       removed: function (id) {
@@ -166,10 +189,11 @@ LocalCollection._observeFromObserveChanges = function (cursor, observeCallbacks)
         var self = this;
         if (observeCallbacks.changed) {
           var oldDoc = self.docs.get(id);
-          var doc = EJSON.clone(oldDoc);
-          DiffSequence.applyChanges(doc, fields);
+          var doc = oldDoc;
+          doc = DiffSequence.applyChanges(doc, fields);
+          self.docs.set(id, doc);
           observeCallbacks.changed(transform(doc),
-                                   transform(EJSON.clone(oldDoc)));
+                                   transform(oldDoc));
         }
       },
       removed: function (id) {

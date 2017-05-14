@@ -1,8 +1,8 @@
 var global = Function('return this')();
-var _ = require('underscore');
+var _ = require('./immutable_underscore.js');
 var MongoID = require('metstrike-mongo-id');
 var EJSON = require('metstrike-ejson');
-var GeoJSON = require('metstrike-geojson-utils');
+var Gju = require('./immutable_geojson_utils.js');
 
 // The minimongo selector compiler!
 
@@ -88,7 +88,7 @@ _.extend(Minimongo.Matcher.prototype, {
       self._selector = {_id: selector};
       self._recordPathUsed('_id');
       return function (doc) {
-        return {result: EJSON.equals(doc._id, selector)};
+        return {result: EJSON.equals(_.get(doc, '_id'), selector)};
       };
     }
 
@@ -126,10 +126,21 @@ _.extend(Minimongo.Matcher.prototype, {
 //
 // If this is the root document selector (ie, not wrapped in $and or the like),
 // then isRoot is true. (This is used by $near.)
+//
+// Example:
+// ========
+// docSelector={a: 12, b: 13, c: {$gt: 10}}
+//
+
 var compileDocumentSelector = function (docSelector, matcher, options) {
   options = options || {};
   var docMatchers = [];
   _.each(docSelector, function (subSelector, key) {
+    // key: subSelector
+    // ================
+    // a: 12
+    // b: 13
+    // c: {$gt: 10}}
     if (key.substr(0, 1) === '$') {
       // Outer operators are either logical operators (they recurse back into
       // this function), or $where.
@@ -163,12 +174,15 @@ var compileDocumentSelector = function (docSelector, matcher, options) {
 // [branched value]->result object.
 var compileValueSelector = function (valueSelector, matcher, isRoot) {
   if (valueSelector instanceof RegExp) {
+    // /.*/
     matcher._isSimple = false;
     return convertElementMatcherToBranchedMatcher(
       regexpElementMatcher(valueSelector));
   } else if (isOperatorObject(valueSelector)) {
+    // {$gt: 10}
     return operatorBranchedMatcher(valueSelector, matcher, isRoot);
   } else {
+    // 12, 13, 'abc', object
     return convertElementMatcherToBranchedMatcher(
       equalityElementMatcher(valueSelector));
   }
@@ -181,11 +195,16 @@ var convertElementMatcherToBranchedMatcher = function (
     elementMatcher, options) {
   options = options || {};
   return function (branches) {
+    // BRANCHES:  [{"value":"cryptographer"}]
+    // EXPANDED:  [{"value":"cryptographer"}]
+    // BRANCHES:  [{"value":["fruit","red","squishy"]}]
+    // EXPANDED:  [{"value":["fruit","red","squishy"]},{"value":"fruit","arrayIndices":[0]},{"value":"red","arrayIndices":[1]},{"value":"squishy","arrayIndices":[2]}]
     var expanded = branches;
     if (!options.dontExpandLeafArrays) {
       expanded = expandArraysInBranches(
         branches, options.dontIncludeLeafArrays);
     }
+
     var ret = {};
     ret.result = _.any(expanded, function (element) {
       var matched = elementMatcher(element.value);
@@ -254,6 +273,8 @@ var equalityElementMatcher = function (elementSelector) {
     };
   }
 
+  elementSelector = _.fromJS(elementSelector);
+
   return function (value) {
     return LocalCollection._f._equal(elementSelector, value);
   };
@@ -270,6 +291,8 @@ var operatorBranchedMatcher = function (valueSelector, matcher, isRoot) {
 
   var operatorMatchers = [];
   _.each(valueSelector, function (operand, operator) {
+    // VALUE SELECTOR: operand: 10 , operator: "$gt"
+    // VALUE SELECTOR: operand: 20 , operator: "$gte"
     var simpleRange = _.contains(['$lt', '$lte', '$gt', '$gte'], operator) &&
       _.isNumber(operand);
     var simpleEquality = _.contains(['$ne', '$eq'], operator) && !_.isObject(operand);
@@ -357,12 +380,12 @@ var LOGICAL_OPERATORS = {
     if (!(selectorValue instanceof Function)) {
       // XXX MongoDB seems to have more complex logic to decide where or or not
       // to add "return"; not sure exactly what it is.
-      selectorValue = Function("obj", "return " + selectorValue);
+      selectorValue = Function("_", "obj", "return " + selectorValue);
     }
     return function (doc) {
       // We make the document available as both `this` and `obj`.
       // XXX not sure what we should do if this throws
-      return {result: selectorValue.call(doc, doc)};
+      return {result: selectorValue.call(doc, _, doc)};
     };
   },
 
@@ -457,23 +480,23 @@ var VALUE_OPERATORS = {
     var maxDistance, point, distance;
     if (isPlainObject(operand) && _.has(operand, '$geometry')) {
       // GeoJSON "2dsphere" mode.
-      maxDistance = operand.$maxDistance;
-      point = operand.$geometry;
+      maxDistance = _.get(operand, '$maxDistance');
+      point = _.get(operand, '$geometry');
       distance = function (value) {
         // XXX: for now, we don't calculate the actual distance between, say,
         // polygon and circle. If people care about this use-case it will get
         // a priority.
-        if (!value || !value.type)
+        if (!value || !_.get(value, 'type'))
           return null;
-        if (value.type === "Point") {
-          return GeoJSON.pointDistance(point, value);
+        if (_.get(value, 'type') === "Point") {
+          return Gju.pointDistance(point, value);
         } else {
-          return GeoJSON.geometryWithinRadius(value, point, maxDistance)
+          return Gju.geometryWithinRadius(value, point, maxDistance)
             ? 0 : maxDistance + 1;
         }
       };
     } else {
-      maxDistance = valueSelector.$maxDistance;
+      maxDistance = _.get(valueSelector, '$maxDistance');
       if (!isArray(operand) && !isPlainObject(operand))
         throw Error("$near argument must be coordinate pair or GeoJSON");
       point = pointToArray(operand);
@@ -519,8 +542,8 @@ var VALUE_OPERATORS = {
 var distanceCoordinatePairs = function (a, b) {
   a = pointToArray(a);
   b = pointToArray(b);
-  var x = a[0] - b[0];
-  var y = a[1] - b[1];
+  var x = _.get(a, 0) - _.get(b, 0);
+  var y = _.get(a, 1) - _.get(b, 1);
   if (_.isNaN(x) || _.isNaN(y))
     return null;
   return Math.sqrt(x * x + y * y);
@@ -552,6 +575,8 @@ var makeInequality = function (cmpValueComparator) {
         operand = null;
 
       var operandType = LocalCollection._f._type(operand);
+
+      operand = _.fromJS(operand);
 
       return function (value) {
         if (value === undefined)
@@ -676,14 +701,14 @@ var ELEMENT_OPERATORS = {
   }),
   $mod: {
     compileElementSelector: function (operand) {
-      if (!(isArray(operand) && operand.length === 2
-            && typeof(operand[0]) === 'number'
-            && typeof(operand[1]) === 'number')) {
+      if (!(isArray(operand) && _.size(operand) === 2
+            && typeof(_.get(operand, 0)) === 'number'
+            && typeof(_.get(operand, 1)) === 'number')) {
         throw Error("argument to $mod must be an array of two numbers");
       }
       // XXX could require to be ints or round or something
-      var divisor = operand[0];
-      var remainder = operand[1];
+      var divisor = _.get(operand, 0);
+      var remainder = _.get(operand, 1);
       return function (value) {
         return typeof value === 'number' && value % divisor === remainder;
       };
@@ -728,7 +753,7 @@ var ELEMENT_OPERATORS = {
         throw Error("$size needs a number");
       }
       return function (value) {
-        return isArray(value) && value.length === operand;
+        return isArray(value) && _.size(value) === operand;
       };
     }
   },
@@ -870,8 +895,8 @@ var ELEMENT_OPERATORS = {
       return function (value) {
         if (!isArray(value))
           return false;
-        for (var i = 0; i < value.length; ++i) {
-          var arrayElement = value[i];
+        for (var i = 0; i < _.size(value); ++i) {
+          var arrayElement = _.get(value, i);
           var arg;
           if (isDocMatcher) {
             // We can only match {$elemMatch: {b: 3}} against objects.
@@ -980,7 +1005,7 @@ var makeLookupFunction = function (key, options) {
       // If we're being asked to do an invalid lookup into an array (non-integer
       // or out-of-bounds), return no results (which is different from returning
       // a single undefined result, in that `null` equality checks won't match).
-      if (!(firstPartIsNumeric && firstPart < doc.length))
+      if (!(firstPartIsNumeric && firstPart < _.size(doc)))
         return [];
 
       // Remember that we used this array index. Include an 'x' to indicate that
@@ -990,7 +1015,7 @@ var makeLookupFunction = function (key, options) {
     }
 
     // Do our first lookup.
-    var firstLevel = doc[firstPart];
+    var firstLevel = _.get(doc, firstPart);
 
     // If there is no deeper to dig, return what we found.
     //
@@ -1069,14 +1094,14 @@ var expandArraysInBranches = function (branches, skipTheArrays) {
 
   var branchesOut = [];
   _.each(branches, function (branch) {
-    var thisIsArray = isArray(branch.value);
+    var thisIsArray = isArray(_.get(branch, 'value'));
     // We include the branch itself, *UNLESS* we it's an array that we're going
     // to iterate and we're told to skip arrays.  (That's right, we include some
     // arrays even skipTheArrays is true: these are arrays that were found via
     // explicit numerical indices.)
     if (!(skipTheArrays && thisIsArray && !branch.dontIterate)) {
       branchesOut.push({
-        value: branch.value,
+        value: _.get(branch, 'value'),
         arrayIndices: branch.arrayIndices
       });
     }
@@ -1185,7 +1210,15 @@ LocalCollection._f = {
 
   // deep equality test: use for literal document and array matches
   _equal: function (a, b) {
-    return EJSON.equals(a, b, {keyOrderSensitive: true});
+    if(!_.isSpecialObject(a) && !_.isImmutable(a)) {
+      throw Error("_equal: argument a is not immutable: "+ JSON.stringify(a));
+    }
+    if(!_.isSpecialObject(b) && !_.isImmutable(b)) {
+      throw Error("_equal: argument b is not immutable"+ JSON.stringify(b));
+    }
+    var e = _.is(a, b);
+    return e;
+    // return EJSON.equals(a, b, {keyOrderSensitive: true});
   },
 
   // maps a type code to a value that can be used to sort values of
@@ -1254,24 +1287,36 @@ LocalCollection._f = {
     if (tb === 2) // string
       return a < b ? -1 : (a === b ? 0 : 1);
     if (ta === 3) { // Object
-      // this could be much more efficient in the expected case ...
+      if(!_.isImmutable(a)) {
+        throw Error("_equal: argument a is not immutable: "+ JSON.stringify(a));
+      }
+      if(!_.isImmutable(b)) {
+        throw Error("_equal: argument b is not immutable"+ JSON.stringify(b));
+      }
+      // XXX - this could be much more efficient in the expected case ...
       var to_array = function (obj) {
         var ret = [];
-        for (var key in obj) {
+        _.each(obj, function(value,key) {
           ret.push(key);
-          ret.push(obj[key]);
-        }
-        return ret;
+          ret.push(value);
+        });
+        return _.fromJS(ret);
       };
       return LocalCollection._f._cmp(to_array(a), to_array(b));
     }
     if (ta === 4) { // Array
+      if(!_.isImmutable(a)) {
+        throw Error("_equal: argument a is not immutable: "+ JSON.stringify(a));
+      }
+      if(!_.isImmutable(b)) {
+        throw Error("_equal: argument b is not immutable"+ JSON.stringify(b));
+      }
       for (var i = 0; ; i++) {
-        if (i === a.length)
-          return (i === b.length) ? 0 : -1;
-        if (i === b.length)
+        if (i === _.size(a))
+          return (i === _.size(b)) ? 0 : -1;
+        if (i === _.size(b))
           return 1;
-        var s = LocalCollection._f._cmp(a[i], b[i]);
+        var s = LocalCollection._f._cmp(_.get(a, i), _.get(b, i));
         if (s !== 0)
           return s;
       }
