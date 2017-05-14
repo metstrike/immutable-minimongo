@@ -1,3 +1,17 @@
+require('strict-mode')(function () {
+
+var mm = require('./minimongo.js');
+var LocalCollection = mm.LocalCollection,
+    Minimongo = mm.Minimongo,
+    _ = require('underscore'),
+    Meteor = require('meteor-standalone-npm-shim'),
+    MinimongoTest = mm.MinimongoTest,
+    Tinytest = require('meteor-standalone-npm-tinytest'),
+    Random = require('meteor-standalone-random'),
+    MongoID = require('meteor-standalone-mongo-id'),
+    ReactiveVar = mm.ReactiveVar,
+    Tracker = mm.Tracker,
+    EJSON = require('meteor-standalone-ejson');
 
 // Hack to make LocalCollection generate ObjectIDs by default.
 LocalCollection._useOID = true;
@@ -3369,3 +3383,8 @@ Tinytest.add("minimongo - cannot $rename with null bytes", function (test) {
     collection.update({ _id: id }, { $rename: { a: '\0a', c: 'c\0' } });
   }, "The 'to' field for $rename cannot contain an embedded null byte");
 });
+
+Tinytest.runNpm();
+
+});
+
